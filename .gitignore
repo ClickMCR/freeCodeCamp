@@ -204,3 +204,6 @@ client/static/_redirects
 
 ### UI Components ###
 tools/ui-components/dist
+
+###### Added by me (AC) ######
+production.env
