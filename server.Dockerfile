@@ -1,6 +1,7 @@
 FROM node:16-alpine as builder
 USER node
 WORKDIR /home/node/build
+RUN mkdir -p /home/node/build && chown -R node:node /home/node/build
 COPY --chown=node:node . .
 
 RUN npm ci --no-progress
