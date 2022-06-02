@@ -207,3 +207,4 @@ tools/ui-components/dist
 
 ###### Added by me (AC) ######
 production.env
+dhparam/dhparam-2048.pem

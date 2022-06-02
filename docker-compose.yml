@@ -11,43 +11,86 @@ services:
     networks:
       - app-network
 
-  webserver:
-    image: nginx:mainline-alpine
-    container_name: webserver
+  fcc-api:
+    build:
+      context: .
+      dockerfile: server.Dockerfile
+    image: clickmcr/server
+    container_name: server
     restart: unless-stopped
+    networks:
+      - app-network
+    environment:
+      NODE_ENV: 'production'
+
+  https-portal:
+    image: steveltn/https-portal:1
     ports:
-      - "80:80"
-    volumes:
-      - web-root:/var/www/html
-      - ./nginx-conf:/etc/nginx/conf.d
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-    depends_on:
+      - '80:80'
+      - '443:443'
+    links:
       - fcc-client
+      - fcc-api
+    restart: always
+    environment:
+      DOMAINS: 'freecodecamp.clickmcr.com -> http://fcc-client:3000, fcc-api.clickmcr.com -> http://fcc-api:3000'
+      # STAGE: 'production' # Don't use production until staging works
+    volumes: 
+      - https-portal-data:/var/lib/https-portal
     networks:
       - app-network
 
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/lib/letsencrypt
-      - web-root:/var/www/html
-    depends_on:
-      - webserver
-    command: certonly --webroot --webroot-path=/var/www/html --email asa@madlab.org.uk --agree-tos --no-eff-email --staging -d '*.clickmcr.com' -d clickmcr.com
-
 volumes:
-  certbot-etc:
-  certbot-var:
-  web-root:
-    # driver: local
-    # driver_opts:
-    #   type: none
-    #   device: /home/sammy/node_project/views/
-    #   o: bind
+  https-portal-data:
 
 networks:
   app-network:
-    driver: bridge 
+
+  # webserver:
+  #   image: nginx:mainline-alpine
+  #   container_name: webserver
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - web-root:/var/www/html
+  #     - ./nginx-conf:/etc/nginx/conf.d
+  #     - certbot-etc:/etc/letsencrypt
+  #     - certbot-var:/var/lib/letsencrypt
+  #     - dhparam:/etc/ssl/certs
+  #   depends_on:
+  #     - fcc-client
+  #   networks:
+  #     - app-network
+
+  # certbot:
+  #   image: certbot/certbot
+  #   container_name: certbot
+  #   volumes:
+  #     - certbot-etc:/etc/letsencrypt
+  #     - certbot-var:/var/lib/letsencrypt
+  #     - web-root:/var/www/html
+  #   depends_on:
+  #     - webserver
+  #   command: certonly --webroot --webroot-path=/var/www/html --email asa@madlab.org.uk --agree-tos --no-eff-email --staging --force-renewal -d freecodecamp.clickmcr.com -d fcc-api.clickmcr.com
+
+# volumes:
+#   certbot-etc:
+#   certbot-var:
+#   web-root:
+#     # driver: local
+#     # driver_opts:
+#     #   type: none
+#     #   device: /home/sammy/node_project/views/
+#     #   o: bind
+#   dhparam:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       device: /root/freeCodeCamp/dhparam
+#       o: bind
+
+# networks:
+#   app-network:
+#     driver: bridge 
