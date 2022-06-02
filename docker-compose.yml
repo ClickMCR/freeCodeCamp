@@ -18,13 +18,14 @@ services:
     image: clickmcr/server
     container_name: server
     restart: unless-stopped
-    networks:
-      - app-network
     environment:
       NODE_ENV: 'production'
+    networks:
+      - app-network
 
   https-portal:
     image: steveltn/https-portal:1
+    container_name: https
     ports:
       - '80:80'
       - '443:443'
@@ -33,8 +34,10 @@ services:
       - fcc-api
     restart: always
     environment:
-      DOMAINS: 'freecodecamp.clickmcr.com -> http://fcc-client:3000, fcc-api.clickmcr.com -> http://fcc-api:3000'
-      # STAGE: 'production' # Don't use production until staging works
+      DOMAINS: 'freecodecamp.clickmcr.com -> http://fcc-client:8000, fcc-api.clickmcr.com -> http://fcc-api:3000'
+      STAGE: 'production' # Don't use production until staging works
+      PROXY_BUFFERS: '8 256k' # Either 4k or 8k depending on the platform
+      PROXY_BUFFER_SIZE: '256k'
     volumes: 
       - https-portal-data:/var/lib/https-portal
     networks:
